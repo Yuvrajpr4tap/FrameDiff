@@ -12,12 +12,12 @@ class SchemaDiff:
 
     added_columns: List[str] = field(default_factory=list)
     removed_columns: List[str] = field(default_factory=list)
-    type_changes: Dict[str, Tuple[str, str]] = field(
+    type_changes: Dict[str, Dict[str, str]] = field(
         default_factory=dict
-    )  # col → (before_dtype, after_dtype)
-    nullable_changes: Dict[str, Tuple[bool, bool]] = field(
+    )  # col → {"before": before_dtype, "after": after_dtype}
+    nullable_changes: Dict[str, Dict[str, bool]] = field(
         default_factory=dict
-    )  # col → (before_nullable, after_nullable)
+    )  # col → {"before": before_nullable, "after": after_nullable}
     index_changes: Dict = field(default_factory=dict)
     issues: List["DiffIssue"] = field(default_factory=list)
 
@@ -88,7 +88,7 @@ def compare_schemas(before: pd.DataFrame, after: pd.DataFrame) -> SchemaDiff:
         before_dtype = str(before[col].dtype)
         after_dtype = str(after[col].dtype)
         if before_dtype != after_dtype:
-            diff.type_changes[col] = (before_dtype, after_dtype)
+            diff.type_changes[col] = {"before": before_dtype, "after": after_dtype}
             severity = _assess_type_change_severity(before_dtype, after_dtype)
             issues.append(
                 DiffIssue(
@@ -103,7 +103,7 @@ def compare_schemas(before: pd.DataFrame, after: pd.DataFrame) -> SchemaDiff:
         before_has_null = before[col].isna().any()
         after_has_null = after[col].isna().any()
         if before_has_null != after_has_null:
-            diff.nullable_changes[col] = (before_has_null, after_has_null)
+            diff.nullable_changes[col] = {"before": before_has_null, "after": after_has_null}
 
     # Detect index changes
     if before.index.name != after.index.name or str(before.index.dtype) != str(

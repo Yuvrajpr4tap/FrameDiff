@@ -3,7 +3,6 @@ Core compare() function — the main entry point for framediff.
 """
 from typing import Union, Optional, List
 import pandas as pd
-import polars as pl
 
 from .schema import compare_schemas
 from .stats import compare_stats
@@ -11,36 +10,60 @@ from .rows import compare_rows
 from .report import DiffReport
 from .exceptions import InvalidFrameError
 
+# Try to import polars at module level
+try:
+    import polars as pl
+    HAS_POLARS = True
+except ImportError:
+    HAS_POLARS = False
+
 
 def _normalise(df: Union[pd.DataFrame, "pl.DataFrame"]) -> pd.DataFrame:
     """
     Normalize a DataFrame to pandas format.
 
-    Supports both pandas and Polars DataFrames.
+    Supports both pandas and Polars DataFrames and LazyFrames.
 
     Args:
-        df: pandas or Polars DataFrame
+        df: pandas or Polars DataFrame/LazyFrame
 
     Returns:
         pandas DataFrame
 
     Raises:
-        InvalidFrameError: If not a supported DataFrame type
+        TypeError: If not a supported DataFrame type
     """
     if isinstance(df, pd.DataFrame):
         return df
 
-    # Try Polars
-    try:
-        import polars as pl
+    # Try Polars DataFrame/LazyFrame by class check
+    type_name = type(df).__name__
+    module_name = type(df).__module__
+    
+    if "polars" in module_name:
+        if "DataFrame" in type_name:
+            # Standard Polars DataFrame
+            if HAS_POLARS and isinstance(df, pl.DataFrame):
+                return df.to_pandas()
+            # Fallback using method call
+            try:
+                if hasattr(df, 'to_pandas'):
+                    return df.to_pandas()
+            except Exception:
+                pass
+        elif "LazyFrame" in type_name:
+            # Polars LazyFrame - collect first then convert
+            try:
+                if hasattr(df, 'collect'):
+                    collected = df.collect()
+                    if hasattr(collected, 'to_pandas'):
+                        return collected.to_pandas()
+            except Exception:
+                pass
 
-        if isinstance(df, pl.DataFrame):
-            return df.to_pandas()
-    except ImportError:
-        pass
-
-    raise InvalidFrameError(
-        f"Unsupported frame type: {type(df)}. Expected pandas.DataFrame or polars.DataFrame"
+    raise TypeError(
+        f"Unsupported frame type: {module_name}.{type_name}. "
+        f"Expected pandas.DataFrame or polars.DataFrame"
     )
 
 
@@ -91,7 +114,8 @@ def compare(
         >>> report.assert_within(max_rows_added_pct=5, max_rows_removed_pct=5)
 
     Raises:
-        InvalidFrameError: If before or after are not supported DataFrame types
+        TypeError: If before or after are not supported DataFrame types
+        ValueError: If key validation fails
     """
     # Normalize frames
     before_normalized = _normalise(before)
