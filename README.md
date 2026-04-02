@@ -371,5 +371,3 @@ MIT License — see [LICENSE](LICENSE) for details.
 Contributions welcome! Please open an issue or PR.
 
 ---
-
-**Made with ❤️ for data quality engineers**
