@@ -230,7 +230,7 @@ def _compare_rows_with_key(
 
     # Count modified rows by comparing values for common keys
     modified_count = 0
-    modified_samples = []
+    modified_samples: list[dict] = []
     
     for key_vals in before_set & after_set:
         # Get all rows matching this key value(s)
