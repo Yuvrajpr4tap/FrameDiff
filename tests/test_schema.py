@@ -43,7 +43,9 @@ def test_type_change(df_type_change_before, df_type_change_after):
     diff = compare_schemas(df_type_change_before, df_type_change_after)
 
     assert "amount" in diff.type_changes
-    before_dtype, after_dtype = diff.type_changes["amount"]
+    type_change = diff.type_changes["amount"]
+    before_dtype = type_change["before"]
+    after_dtype = type_change["after"]
     assert "float" in before_dtype.lower()
     assert "int" in after_dtype.lower()
 

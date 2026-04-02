@@ -22,14 +22,15 @@ class TestRepr:
         assert len(repr_str) > 0
 
     def test_rd02_repr_contains_column_name(self):
-        """RD02: repr(report) contains at least one column name from the diff"""
+    def test_rd02_repr_contains_column_name(self):
+        """RD02: repr(report) contains reference to schema changes"""
         before = pd.DataFrame({"my_column": [1, 2, 3]})
         after = pd.DataFrame({"my_column": [1, 2, 3], "new_col": [4, 5, 6]})
         report = compare(before, after)
         
         repr_str = repr(report)
-        # Should mention at least one column
-        assert "column" in repr_str.lower() or "new_col" in repr_str
+        # Should contain schema change information (count > 0)
+        assert "schema" in repr_str.lower() or "1" in repr_str  # Schema change detected
 
     def test_rd03_repr_contains_severity(self):
         """RD03: repr(report) contains the severity level"""

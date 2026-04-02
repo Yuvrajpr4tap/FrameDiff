@@ -347,8 +347,14 @@ def _compute_categorical_diff(
         stat_diff.distribution_method = "none"
         return
 
-    before_cats = set(before.unique())
-    after_cats = set(after.unique())
+    try:
+        before_cats = set(before.unique())
+        after_cats = set(after.unique())
+    except TypeError:
+        # Column contains unhashable types (e.g., lists)
+        # Fall back to treating all values as unique
+        stat_diff.distribution_method = "none"
+        return
 
     # Sort categories, but handle mixed types gracefully
     def _safe_sort(items):

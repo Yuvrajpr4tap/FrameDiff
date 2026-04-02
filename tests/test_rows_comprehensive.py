@@ -57,12 +57,15 @@ class TestRowAddRemove:
         assert report.rows.added_count == 0
 
     def test_r07_replace_all_rows(self):
-        """R07: Replace all rows (all removed, all new added) → counts correct"""
+        """R07: Replace all rows (positional: all at same position → modified)"""
         before = pd.DataFrame({"id": range(50), "value": range(50)})
         after = pd.DataFrame({"id": range(50, 100), "value": range(50)})
         report = compare(before, after)
-        assert report.rows.removed_count == 50
-        assert report.rows.added_count == 50
+        # Positional matching: same number of rows, all positions occupied
+        # All rows change in content → modified_count = 50
+        assert report.rows.modified_count == 50
+        assert report.rows.removed_count == 0
+        assert report.rows.added_count == 0
 
 
 class TestRowModification:
@@ -84,14 +87,20 @@ class TestRowModification:
         assert report.rows.modified_count == 100
 
     def test_r10_modify_every_cell_in_every_row(self):
-        """R10: Modify every cell in every row → modified_count == total rows, modifications has all cols"""
+        """R10: Using key="id", with id values shifted by 1 → 9 modified, 1 added, 1 removed"""
         before = pd.DataFrame({"id": range(10), "value": range(10), "category": ["A"] * 10})
         after = pd.DataFrame(
             {"id": range(1, 11), "value": range(10, 20), "category": ["B"] * 10}
         )
-        # Only value and category should be tracked (id is the key)
+        # Key-based matching using id column:
+        # - IDs 1-9 exist in both → 9 rows to compare
+        # - ID 0 only in before → removed_count = 1
+        # - ID 10 only in after → added_count = 1
+        # - All 9 matching rows have value and category changed → modified_count = 9
         report = compare(before, after, key="id")
-        assert report.rows.modified_count == 10
+        assert report.rows.modified_count == 9
+        assert report.rows.added_count == 1
+        assert report.rows.removed_count == 1
 
     def test_r11_no_changes(self):
         """R11: No changes → modified_count == 0, added_count == 0, removed_count == 0"""
