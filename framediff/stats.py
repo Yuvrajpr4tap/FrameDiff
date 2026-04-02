@@ -2,7 +2,7 @@
 Statistical diff logic — PSI, KL divergence, distribution analysis, etc.
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 import pandas as pd
 import numpy as np
 from scipy.stats import chi2_contingency
@@ -63,7 +63,7 @@ def compare_stats(
     before: pd.DataFrame,
     after: pd.DataFrame,
     stat_methods: List[str] = None,
-    key: Optional[str | List[str]] = None,
+    key: Optional[Union[str, List[str]]] = None,
 ) -> Dict[str, StatDiff]:
     """
     Compute statistical diffs for all overlapping columns.
@@ -160,7 +160,7 @@ def _value_change_rate(
     before: pd.DataFrame,
     after: pd.DataFrame,
     col: str,
-    key: Optional[str | List[str]],
+    key: Optional[Union[str, List[str]]],
 ) -> Optional[float]:
     """
     Calculate the fraction of rows where a column value changed.

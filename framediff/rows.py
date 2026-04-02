@@ -2,7 +2,7 @@
 Row-level diff logic — detect added, removed, and modified rows.
 """
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Union
 import pandas as pd
 from .exceptions import DiffKeyError
 
@@ -67,7 +67,7 @@ def _check_duplicate_keys(df: pd.DataFrame, keys: List[str], frame_label: str) -
 def compare_rows(
     before: pd.DataFrame,
     after: pd.DataFrame,
-    key: Optional[str | List[str]] = None,
+    key: Optional[Union[str, List[str]]] = None,
 ) -> RowDiff:
     """
     Compare row-level changes between two DataFrames.
