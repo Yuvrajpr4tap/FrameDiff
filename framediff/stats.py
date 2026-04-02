@@ -62,7 +62,7 @@ class StatDiff:
 def compare_stats(
     before: pd.DataFrame,
     after: pd.DataFrame,
-    stat_methods: List[str] = None,
+    stat_methods: List[str] | None = None,
     key: Optional[str | List[str]] = None,
 ) -> Dict[str, StatDiff]:
     """

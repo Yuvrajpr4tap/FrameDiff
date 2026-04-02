@@ -46,6 +46,7 @@ dev = [
 ]
 all = [
     "framediff[polars,rich,dev]",
+    "psutil",
 ]
 
 [project.urls]
