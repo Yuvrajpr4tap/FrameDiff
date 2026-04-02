@@ -6,7 +6,7 @@ Custom exceptions for framediff.
 class DiffThresholdError(Exception):
     """Raised when a diff report violates specified thresholds in assert_within()."""
 
-    def __init__(self, message: str, violations: list = None):
+    def __init__(self, message: str, violations: list | None = None):
         """
         Args:
             message: Human-readable error message
