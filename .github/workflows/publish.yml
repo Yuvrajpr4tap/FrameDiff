@@ -1,0 +1,64 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+    
+    - name: Build distribution
+      run: python -m build
+    
+    - name: Check distribution
+      run: twine check dist/*
+    
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        verbose: true
+
+  test-installation:
+    needs: deploy
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install framediff from PyPI
+      run: pip install framediff
+    
+    - name: Test import
+      run: python -c "import framediff; print(f'✓ framediff {framediff.__version__} installed successfully')"
+    
+    - name: Test basic functionality
+      run: |
+        python << 'EOF'
+        import framediff as fd
+        import pandas as pd
+        
+        df1 = pd.DataFrame({"A": [1, 2, 3], "B": ["x", "y", "z"]})
+        df2 = pd.DataFrame({"A": [1, 2, 3], "B": ["x", "y", "z"]})
+        
+        report = fd.compare(df1, df2)
+        assert report.severity == "info"
+        assert len(report.issues) == 0
+        print("✓ Basic functionality test passed")
+        EOF
