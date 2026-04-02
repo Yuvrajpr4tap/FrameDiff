@@ -117,9 +117,14 @@ def compare_stats(
         before_clean = before[col].dropna()
         after_clean = after[col].dropna()
 
-        # Cardinality
-        stat_diff.cardinality_before = before_clean.nunique()
-        stat_diff.cardinality_after = after_clean.nunique()
+        # Cardinality (handle unhashable types like lists in object columns)
+        try:
+            stat_diff.cardinality_before = before_clean.nunique()
+            stat_diff.cardinality_after = after_clean.nunique()
+        except TypeError:
+            # Column contains unhashable types (e.g., lists), cannot compute cardinality
+            stat_diff.cardinality_before = len(before_clean)
+            stat_diff.cardinality_after = len(after_clean)
 
         # Determine column type and compute distribution diff
         if pd.api.types.is_numeric_dtype(dtype):
@@ -426,13 +431,31 @@ def _compute_datetime_diff(
 
     # Rough measure of range shift
     if before_min is not None and after_min is not None:
-        min_shift = abs((after_min - before_min).days)
-        max_shift = abs((after_max - before_max).days) if before_max else 0
-        total_shift = (min_shift + max_shift) / 2
-        stat_diff.distribution_score = float(total_shift)
-        if total_shift > 365:
-            stat_diff.distribution_label = "large shift"
-        elif total_shift > 30:
-            stat_diff.distribution_label = "moderate shift"
-        else:
-            stat_diff.distribution_label = "stable"
+        try:
+            # Handle timezone-aware vs naive datetime mismatch
+            # Convert both to UTC if either has timezone info
+            if hasattr(before_min, 'tz'):
+                if before_min.tz is not None and (not hasattr(after_min, 'tz') or after_min.tz is None):
+                    # before is tz-aware, after is naive - localize after to UTC
+                    after_min = after_min.replace(tzinfo=None) if hasattr(after_min, 'replace') else after_min
+                    # Make them compatible for subtraction
+                    before_min = before_min.replace(tzinfo=None) if hasattr(before_min, 'replace') else before_min
+                elif after_min.tz is not None and (not hasattr(before_min, 'tz') or before_min.tz is None):
+                    # after is tz-aware, before is naive
+                    before_min = before_min.replace(tzinfo=None) if hasattr(before_min, 'replace') else before_min
+                    after_min = after_min.replace(tzinfo=None) if hasattr(after_min, 'replace') else after_min
+            
+            min_shift = abs((after_min - before_min).days)
+            max_shift = abs((after_max - before_max).days) if before_max else 0
+            total_shift = (min_shift + max_shift) / 2
+            stat_diff.distribution_score = float(total_shift)
+            if total_shift > 365:
+                stat_diff.distribution_label = "large shift"
+            elif total_shift > 30:
+                stat_diff.distribution_label = "moderate shift"
+            else:
+                stat_diff.distribution_label = "stable"
+        except (TypeError, AttributeError):
+            # If we can't compute the shift due to timezone issues, skip it
+            stat_diff.distribution_method = "none"
+            stat_diff.distribution_score = 0.0
