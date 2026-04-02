@@ -2,7 +2,7 @@
 Row-level diff logic — detect added, removed, and modified rows.
 """
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict
+from typing import Any, List, Optional, Dict
 import pandas as pd
 from .exceptions import DiffKeyError
 
@@ -230,7 +230,7 @@ def _compare_rows_with_key(
 
     # Count modified rows by comparing values for common keys
     modified_count = 0
-    modified_samples = []
+    modified_samples: List[Dict[str, Any]] = []
     
     for key_vals in before_set & after_set:
         # Get all rows matching this key value(s)

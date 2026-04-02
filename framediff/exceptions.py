@@ -1,12 +1,13 @@
 """
 Custom exceptions for framediff.
 """
+from typing import Any, Optional
 
 
 class DiffThresholdError(Exception):
     """Raised when a diff report violates specified thresholds in assert_within()."""
 
-    def __init__(self, message: str, violations: list = None):
+    def __init__(self, message: str, violations: Optional[list[Any]] = None):
         """
         Args:
             message: Human-readable error message

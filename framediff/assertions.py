@@ -4,11 +4,11 @@ Assertion utilities for CI integration.
 Most assertion logic is in DiffReport.assert_within(), but this module
 provides utility functions for advanced use cases.
 """
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 def validate_thresholds(
-    thresholds: Dict[str, any],
+    thresholds: Dict[str, Any],
 ) -> tuple[bool, List[str]]:
     """
     Validate that threshold config is well-formed.
