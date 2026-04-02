@@ -43,6 +43,8 @@ dev = [
     "isort>=5.0",
     "flake8>=4.0",
     "mypy>=0.990",
+    "psutil>=5.9.0",
+    "beautifulsoup4>=4.11.0",
 ]
 all = [
     "framediff[polars,rich,dev]",
