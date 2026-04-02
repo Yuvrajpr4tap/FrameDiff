@@ -50,6 +50,9 @@ all = [
     "framediff[polars,rich,dev]",
 ]
 
+[tool.poetry.dev-dependencies]
+pytest-benchmark = "^4.0.0"
+
 [project.urls]
 Homepage = "https://github.com/framediff/framediff"
 Documentation = "https://github.com/framediff/framediff#readme"
